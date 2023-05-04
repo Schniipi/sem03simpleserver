@@ -4,7 +4,9 @@ import (
 	"io"
 	"log"
 	"net"
+	"strings"
 	"sync"
+
 	"github.com/Schniipi/is105sem03/mycrypt"
 )
 
@@ -18,7 +20,6 @@ func main() {
 	}
 	log.Printf("bundet til %s", server.Addr().String())
 	wg.Add(1)
-
 	go func() {
 		defer wg.Done()
 		for {
@@ -38,20 +39,23 @@ func main() {
 						}
 						return // fra for løkke
 					}
+
 					dekryptertMelding := mycrypt.Krypter([]rune(string(buf[:n])), mycrypt.ALF_SEM03, len(mycrypt.ALF_SEM03)-4)
 					log.Println("Dekrypter melding: ", string(dekryptertMelding))
 
-                                        msg := string(dekryptertMelding)
-                                        switch {
-                                        case strings.HasPrefix(msg, "ping"):
-                                               kryptertPong := mycrypt.Krypter([]rune("pong"), mycrypt.ALF_SEM03, 4)
-                                               _, err = c.Write([]byte(string(kryptertPong)))
-                                         case strings.HasPrefix(msg, "Kjevik"):
-                                               kryptertPong := mycrypt.Krypter([]rune("Kjevik;SN39040;18.03.2022 01:50;42.8""), mycrypt.ALF_SEM03, 4)
-                                               _, err = c.Write([]byte(string(kryptertKjevik)))
+					msg := string(dekryptertMelding)
+					switch {
+					case strings.HasPrefix(msg, "ping"):
+						kryptertPong := mycrypt.Krypter([]rune("pong"), mycrypt.ALF_SEM03, 4)
+						_, err = c.Write([]byte(string(kryptertPong)))
+					case strings.HasPrefix(msg, "Kjevik"):
+						kryptertKjevik := mycrypt.Krypter([]rune("Kjevik;SN39040;18.03.2022 01:50;42.8"), mycrypt.ALF_SEM03, 4)
+						_, err = c.Write([]byte(string(kryptertKjevik)))
+
 					default:
 						_, err = c.Write(buf[:n])
 					}
+
 					if err != nil {
 						if err != io.EOF {
 							log.Println(err)
@@ -63,5 +67,5 @@ func main() {
 		}
 	}()
 	wg.Wait()
-}
 
+}
